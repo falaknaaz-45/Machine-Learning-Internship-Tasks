@@ -1,0 +1,81 @@
+# =====================================
+# STEP 1: Import Libraries
+# =====================================
+import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Flatten
+from tensorflow.keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+import matplotlib.pyplot as plt
+# =====================================
+# STEP 2: Load and Preprocess MNIST Data
+# =====================================
+# Load MNIST data
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+
+# Normalize pixel values
+x_train, x_test = x_train / 255.0, x_test / 255.0
+
+# One-hot encode labels
+y_train_cat = to_categorical(y_train, num_classes=10)
+y_test_cat = to_categorical(y_test, num_classes=10)
+# =====================================
+# STEP 3: Define Function to Build and Train Model
+# =====================================
+def build_and_train_model(activation='relu'):
+    model = Sequential([
+        Flatten(input_shape=(28, 28)),
+        Dense(128, activation=activation),
+        Dense(64, activation=activation),
+        Dense(10, activation='softmax')  # output layer for 10 digits
+    ])
+
+    model.compile(optimizer='adam',
+                  loss='categorical_crossentropy',
+                  metrics=['accuracy'])
+
+    print(f"\n📌 Training with Activation Function: {activation}")
+    history = model.fit(x_train, y_train_cat, epochs=10, batch_size=128,
+                        validation_data=(x_test, y_test_cat), verbose=2)
+
+    return history
+# =====================================
+# STEP 4: Train and Compare Models
+# =====================================
+# Train model with ReLU
+history_relu = build_and_train_model('relu')
+
+# Train model with Sigmoid
+history_sigmoid = build_and_train_model('sigmoid')
+# =====================================
+# STEP 5: Plot Accuracy & Loss Curves
+# =====================================
+def plot_history(history, title_prefix):
+    plt.figure(figsize=(12, 5))
+
+    # Accuracy
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['accuracy'], label='Train')
+    plt.plot(history.history['val_accuracy'], label='Val')
+    plt.title(f'{title_prefix} - Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
+    plt.grid(True)
+
+    # Loss
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['loss'], label='Train')
+    plt.plot(history.history['val_loss'], label='Val')
+    plt.title(f'{title_prefix} - Loss')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.grid(True)
+
+    plt.tight_layout()
+    plt.show()
+
+# Plot results
+plot_history(history_relu, 'ReLU Activation')
+plot_history(history_sigmoid, 'Sigmoid Activation')
