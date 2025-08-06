@@ -1,0 +1,52 @@
+import pandas as pd
+import numpy as np
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder, MinMaxScaler, StandardScaler
+
+# Load the Titanic dataset
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+df = pd.read_csv(url)
+
+# ----------------------------
+# 1. Fill Missing Values
+# ----------------------------
+
+# Fill age with median
+df['Age'].fillna(df['Age'].median(), inplace=True)
+
+# Fill embarked with mode
+df['Embarked'].fillna(df['Embarked'].mode()[0], inplace=True)
+
+# Fill fare with median (optional but often needed)
+df['Fare'].fillna(df['Fare'].median(), inplace=True)
+
+# ----------------------------
+# 2. Encode Categorical Variables
+# ----------------------------
+
+# Label encoding for 'Sex'
+le = LabelEncoder()
+df['Sex'] = le.fit_transform(df['Sex'])  # Female=0, Male=1
+
+# One-hot encoding for 'Embarked'
+df = pd.get_dummies(df, columns=['Embarked'], drop_first=True)
+
+# ----------------------------
+# 3. Normalize Numerical Features
+# ----------------------------
+
+# Choose either MinMaxScaler or StandardScaler
+scaler = StandardScaler()
+df[['Age', 'Fare']] = scaler.fit_transform(df[['Age', 'Fare']])
+
+# ----------------------------
+# 4. Create New Features
+# ----------------------------
+
+# A. Extract title from the Name column
+df['Title'] = df['Name'].str.extract(' ([A-Za-z]+)\.', expand=False)
+
+# B. Create Family Size feature
+df['FamilySize'] = df['SibSp'] + df['Parch'] + 1  # +1 to include the passenger
+
+# View the processed data
+print(df.head())
