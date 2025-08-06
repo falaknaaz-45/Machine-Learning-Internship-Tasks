@@ -1,0 +1,46 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Load dataset from a URL
+url = "https://raw.githubusercontent.com/datasciencedojo/datasets/master/titanic.csv"
+df = pd.read_csv(url)
+
+# Explore dataset features
+print("Data Types:\n", df.dtypes)
+print("\nSummary Statistics:\n", df.describe())
+print("\nMissing Values:\n", df.isnull().sum())
+print("\nUnique Values per Column:\n", df.nunique())
+
+# Categorical columns
+categorical_cols = df.select_dtypes(include=['object', 'category']).columns
+
+# Bar plots for categorical variables
+for col in categorical_cols:
+    plt.figure(figsize=(8, 4))
+    df[col].value_counts().plot(kind='bar')
+    plt.title(f'Bar Plot of {col}')
+    plt.xlabel(col)
+    plt.ylabel('Count')
+    plt.tight_layout()
+    plt.show()
+
+# Numerical columns
+numerical_cols = df.select_dtypes(include=['int64', 'float64']).columns
+
+# Scatter plots or histograms for numerical variables
+for col in numerical_cols:
+    plt.figure(figsize=(8, 4))
+    sns.histplot(df[col], kde=True, bins=30)
+    plt.title(f'Histogram of {col}')
+    plt.xlabel(col)
+    plt.tight_layout()
+    plt.show()
+
+# Correlation heatmap for numerical features
+plt.figure(figsize=(10, 8))
+correlation_matrix = df[numerical_cols].corr()
+sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f")
+plt.title("Correlation Heatmap")
+plt.tight_layout()
+plt.show()
