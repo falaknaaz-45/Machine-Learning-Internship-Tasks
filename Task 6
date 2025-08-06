@@ -1,0 +1,81 @@
+# ============================================
+# STEP 1: Import Required Libraries
+# ============================================
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.feature_selection import RFE
+from sklearn.metrics import accuracy_score, classification_report
+from sklearn.preprocessing import LabelEncoder
+# ============================================
+# STEP 2: Load Titanic Dataset
+# ============================================
+# Load from seaborn built-in datasets
+df = sns.load_dataset('titanic')
+print("Original Data:")
+display(df.head())
+# ============================================
+# STEP 3: Data Preprocessing
+# ============================================
+# Drop irrelevant or high-missing columns
+df.drop(['deck', 'embark_town', 'alive', 'who', 'class'], axis=1, inplace=True)
+
+# Drop rows with missing values
+df.dropna(inplace=True)
+
+# Encode categorical features
+label_encoders = {}
+cat_cols = df.select_dtypes(include=['object', 'category']).columns
+
+for col in cat_cols:
+    le = LabelEncoder()
+    df[col] = le.fit_transform(df[col])
+    label_encoders[col] = le
+
+print("\nPreprocessed Data:")
+display(df.head())
+# ============================================
+# STEP 4: Define Features and Target
+# ============================================
+X = df.drop('survived', axis=1)
+y = df['survived']
+# ============================================
+# STEP 5: Train-Test Split
+# ============================================
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# ============================================
+# STEP 6: Apply RFE to Select Best Features
+# ============================================
+model = LogisticRegression(max_iter=1000)
+rfe = RFE(estimator=model, n_features_to_select=5)
+rfe.fit(X_train, y_train)
+
+selected_features = X_train.columns[rfe.support_]
+print("✅ Selected Features by RFE:", selected_features.tolist())
+# ============================================
+# STEP 7: Train Model Using ALL Features
+# ============================================
+model_all = LogisticRegression(max_iter=1000)
+model_all.fit(X_train, y_train)
+y_pred_all = model_all.predict(X_test)
+
+print("\n🔵 Model Performance with All Features:")
+print("Accuracy:", accuracy_score(y_test, y_pred_all))
+print(classification_report(y_test, y_pred_all))
+# ============================================
+# STEP 8: Train Model Using SELECTED Features
+# ============================================
+X_train_sel = X_train[selected_features]
+X_test_sel = X_test[selected_features]
+
+model_sel = LogisticRegression(max_iter=1000)
+model_sel.fit(X_train_sel, y_train)
+y_pred_sel = model_sel.predict(X_test_sel)
+
+print("\n🟢 Model Performance with Selected Features:")
+print("Accuracy:", accuracy_score(y_test, y_pred_sel))
+print(classification_report(y_test, y_pred_sel))
